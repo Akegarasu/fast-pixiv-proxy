@@ -2,6 +2,7 @@ from aiohttp import ClientSession
 from typing import Optional, Dict
 from config import PROXY
 
+base_url = "https://i.pximg.net"
 pHeaders = {
     "Referer": 'https://www.pixiv.net',
     'User-Agent':
@@ -12,7 +13,7 @@ pHeaders = {
 async def get_pixiv(query: str) -> Optional[bytes]:
     split_query = query.split("/")
     if query.startswith("img-original/img/"):
-        return await reverse_pixiv(query)
+        return await reverse_pixiv(base_url + query)
     else:
         if split_query[0].isdigit():
             img_urls = await ajax_pixiv(split_query[0])
