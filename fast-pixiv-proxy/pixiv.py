@@ -2,7 +2,7 @@ from aiohttp import ClientSession
 from typing import Optional, Dict
 from config import PROXY
 
-base_url = "https://i.pximg.net"
+base_url = "https://i.pximg.net/"
 p_headers = {
     "Referer": 'https://www.pixiv.net',
     'User-Agent':
