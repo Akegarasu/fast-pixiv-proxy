@@ -22,11 +22,13 @@ async def read_root():
 
 @app.get("/{pixiv_path:path}/")
 async def read_root(pixiv_path: str):
-    rep = await get_pixiv(pixiv_path)
-    headers = {
-        "cache-control": "no-cache"
-    }
-    return Response(rep, headers=headers, media_type="stream")
+    if (resp := await get_pixiv(pixiv_path)) != None:
+        rep, content_type = resp
+        headers = {
+            "cache-control": "no-cache",
+            "Content-Type": content_type
+        }
+        return Response(rep, headers=headers, media_type="stream")
 
 if __name__ == '__main__':
     uvicorn.run(app='main:app', host="127.0.0.1", port=8000, reload=True, debug=True)
