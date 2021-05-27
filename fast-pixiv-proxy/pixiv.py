@@ -10,19 +10,20 @@ p_headers = {
 }
 
 
-async def get_pixiv(query: str) -> Optional[bytes]:
+async def get_pixiv(query: str) -> Optional[tuple]:
     split_query = query.split("/")
     if query.startswith("img-original/img/"):
         return await reverse_pixiv(base_url + query)
+    if split_query[0].isdigit():
+        img_urls = await ajax_pixiv(split_query[0])
+        img_url = img_urls["original"]
+        if len(split_query) == 2:
+            if split_query[1].isdigit():
+                page = split_query[1]
+                img_url = img_urls["original"].replace("_p0", f"_p{page}")
+        return await reverse_pixiv(img_url)
     else:
-        if split_query[0].isdigit():
-            img_urls = await ajax_pixiv(split_query[0])
-            img_url = img_urls["original"]
-            if len(split_query) == 2:
-                if split_query[1].isdigit():
-                    page = split_query[1]
-                    img_url = img_urls["original"].replace("_p0", f"_p{page}")
-            return await reverse_pixiv(img_url)
+        return None
 
 
 async def ajax_pixiv(pid: str) -> Optional[Dict]:
@@ -37,13 +38,13 @@ async def ajax_pixiv(pid: str) -> Optional[Dict]:
                 return None
 
 
-async def reverse_pixiv(path: str) -> Optional[bytes]:
+async def reverse_pixiv(path: str) -> Optional[tuple]:
     async with ClientSession() as cs:
         async with cs.get(path,
                           headers=p_headers,
                           proxy=PROXY) as rep:
             content = await rep.read()
             if rep.status == 200:
-                return content
+                return content, rep.headers['Content-Type']
             else:
                 return None
