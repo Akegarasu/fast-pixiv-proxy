@@ -22,11 +22,13 @@ async def read_root():
 
 @app.get("/{pixiv_path:path}/")
 async def read_root(pixiv_path: str):
-    if (resp := await get_pixiv(pixiv_path)) != None:
-        rep, content_type = resp
+    resp = await get_pixiv(pixiv_path)
+    if resp != None:
+        rep, content_type = resp["result"]
         headers = {
             "cache-control": "no-cache",
-            "Content-Type": content_type
+            "Content-Type": content_type,
+            "Content-Disposition": f'''inline; filename="{resp['pid']}"'''
         }
         return Response(rep, headers=headers, media_type="stream")
 
