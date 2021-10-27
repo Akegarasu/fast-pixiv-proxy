@@ -1,5 +1,8 @@
+from typing import Dict, Optional, Union
+
 from aiohttp import ClientSession
-from typing import Optional, Dict
+from fastapi.responses import Response
+
 from config import PROXY
 
 base_url = "https://i.pximg.net/"
@@ -10,7 +13,7 @@ p_headers = {
 }
 
 
-async def get_pixiv(query: str, img_type: str) -> Optional[Dict]:
+async def get_pixiv(query: str, img_type: str) -> Union[Dict, Response]:
     split_query = query.split("/")
     if split_query[0] in ("img-original", "img-master", "c"):
         return {
@@ -19,7 +22,7 @@ async def get_pixiv(query: str, img_type: str) -> Optional[Dict]:
         }
     if split_query[0].isdigit():
         if img_type not in ("original", "regular", "small", "thumb", "mini"):
-            return None
+            return Response("Invalid image type", status_code=400)
         img_urls = await ajax_pixiv(split_query[0])
         img_url = img_urls[img_type]
         if len(split_query) == 2:
@@ -30,7 +33,7 @@ async def get_pixiv(query: str, img_type: str) -> Optional[Dict]:
             "result": await reverse_pixiv(img_url),
             "pid": img_url.split("/")[-1]
         }
-    return None
+    return Response("Invalid query", status_code=400)
 
 
 async def ajax_pixiv(pid: str) -> Optional[Dict]:
