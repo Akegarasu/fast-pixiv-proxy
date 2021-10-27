@@ -10,7 +10,7 @@ p_headers = {
 }
 
 
-async def get_pixiv(query: str) -> Optional[tuple]:
+async def get_pixiv(query: str) -> Optional[Dict]:
     split_query = query.split("/")
     if query.startswith("img-original/img/"):
         return {
