@@ -1,8 +1,10 @@
 import uvicorn
 from fastapi import FastAPI
-from pixiv import get_pixiv
 from fastapi.responses import Response
+
 from config import SELF_URL
+from pixiv import get_pixiv
+
 app = FastAPI()
 
 
@@ -22,16 +24,20 @@ async def read_root():
 
 
 @app.get("/{pixiv_path:path}/")
-async def read_root(pixiv_path: str, img_type: str="original"):
+async def read_root(pixiv_path: str, img_type: str = "original"):
     resp = await get_pixiv(query=pixiv_path, img_type=img_type)
-    if resp != None:
-        rep, content_type = resp["result"]
-        headers = {
-            "cache-control": "no-cache",
-            "Content-Type": content_type,
-            "Content-Disposition": f'''inline; filename="{resp['pid']}"'''
-        }
-        return Response(rep, headers=headers, media_type="stream")
+    if isinstance(resp, Response):
+        return resp
+    if isinstance(resp, dict):
+        if "result" in resp:
+            rep, content_type = resp["result"]
+            headers = {
+                "cache-control": "no-cache",
+                "Content-Type": content_type,
+                "Content-Disposition": f'''inline; filename="{resp['pid']}"'''
+            }
+            return Response(rep, headers=headers, media_type="stream")
+    return Response("Invalid request", status_code=400)
 
 if __name__ == '__main__':
     uvicorn.run(app='main:app', host="127.0.0.1", port=8000, reload=True)
