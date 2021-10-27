@@ -30,8 +30,7 @@ async def get_pixiv(query: str, img_type: str) -> Optional[Dict]:
             "result": await reverse_pixiv(img_url),
             "pid": img_url.split("/")[-1]
         }
-    else:
-        return None
+    return None
 
 
 async def ajax_pixiv(pid: str) -> Optional[Dict]:
