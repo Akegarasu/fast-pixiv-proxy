@@ -34,4 +34,4 @@ async def read_root(pixiv_path: str, img_type: str="original"):
         return Response(rep, headers=headers, media_type="stream")
 
 if __name__ == '__main__':
-    uvicorn.run(app='main:app', host="127.0.0.1", port=8000, reload=True, debug=True)
+    uvicorn.run(app='main:app', host="127.0.0.1", port=8000, reload=True)
