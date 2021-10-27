@@ -10,20 +10,22 @@ p_headers = {
 }
 
 
-async def get_pixiv(query: str) -> Optional[Dict]:
+async def get_pixiv(query: str, img_type: str) -> Optional[Dict]:
     split_query = query.split("/")
-    if query.startswith("img-original/img/"):
+    if split_query[0] in ("img-original", "img-master", "c"):
         return {
             "result": await reverse_pixiv(base_url + query),
             "pid": query.split("/")[-1]
         }
     if split_query[0].isdigit():
+        if img_type not in ("original", "regular", "small", "thumb", "mini"):
+            return None
         img_urls = await ajax_pixiv(split_query[0])
-        img_url = img_urls["original"]
+        img_url = img_urls[img_type]
         if len(split_query) == 2:
             if split_query[1].isdigit():
                 page = split_query[1]
-                img_url = img_urls["original"].replace("_p0", f"_p{page}")
+                img_url = img_urls[img_type].replace("_p0", f"_p{page}")
         return {
             "result": await reverse_pixiv(img_url),
             "pid": img_url.split("/")[-1]
