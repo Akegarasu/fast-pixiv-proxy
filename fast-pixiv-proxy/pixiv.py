@@ -24,6 +24,8 @@ async def get_pixiv(query: str, img_type: str) -> Union[Dict, Response]:
         if img_type not in ("original", "regular", "small", "thumb", "mini"):
             return Response("Invalid image type", status_code=400)
         img_urls = await ajax_pixiv(split_query[0])
+        if img_urls == None:
+            return Response("Pixiv api error", status_code=400)
         img_url = img_urls[img_type]
         if len(split_query) == 2:
             if split_query[1].isdigit():
