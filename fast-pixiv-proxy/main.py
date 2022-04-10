@@ -2,8 +2,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import Response
 
-from config import SELF_URL
-from pixiv import get_pixiv
+from config import HOST, PORT, SELF_URL
+from pixiv import get_pixiv, PixivImage
 
 app = FastAPI()
 
@@ -40,4 +40,4 @@ async def read_root(pixiv_path: str, img_type: str = "original"):
     return Response("Invalid request", status_code=400)
 
 if __name__ == '__main__':
-    uvicorn.run(app='main:app', host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run(app='main:app', host=HOST, port=PORT, reload=True)
