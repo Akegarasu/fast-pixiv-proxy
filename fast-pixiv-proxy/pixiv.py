@@ -3,7 +3,8 @@ from typing import Dict, Optional, Union
 from aiohttp import ClientSession
 from fastapi.responses import Response
 
-from config import PROXY
+from config import PROXY, USE_SNI_BYPASS
+from snibypass import BypassClient
 
 base_url = "https://i.pximg.net/"
 p_headers = {
@@ -36,45 +37,39 @@ class PixivImage:
 async def get_pixiv(query: str, img_type: str) -> Union[Response, PixivImage]:
     split_query = query.split("/")
     if split_query[0] in ("img-original", "img-master", "c"):
-        return {
-            "result": await reverse_pixiv(base_url + query),
-            "pid": query.split("/")[-1]
-        }
-    if split_query[0].isdigit():
+        return await reverse_pixiv(base_url + query)
+
+    elif split_query[0].isdigit():
         if img_type not in ("original", "regular", "small", "thumb", "mini"):
             return Response("Invalid image type", status_code=400)
         img_urls = await ajax_pixiv(split_query[0])
-        if img_urls == None:
+        if img_urls is None:
             return Response("Pixiv api error", status_code=400)
         img_url = img_urls[img_type]
         if len(split_query) == 2:
             if split_query[1].isdigit():
                 page = split_query[1]
                 img_url = img_urls[img_type].replace("_p0", f"_p{page}")
-        return {
-            "result": await reverse_pixiv(img_url),
-            "pid": img_url.split("/")[-1]
-        }
+        return await reverse_pixiv(img_url)
     return Response("Invalid query", status_code=400)
 
 
 async def ajax_pixiv(pid: str) -> Optional[Dict]:
-    async with ClientSession() as cs:
-        async with cs.get(f"https://www.pixiv.net/ajax/illust/{pid}",
-                          headers=p_headers,
-                          proxy=PROXY) as rep:
+    client = BypassClient if USE_SNI_BYPASS else ClientSession
+    proxy = "" if USE_SNI_BYPASS else PROXY
+    async with client() as c:
+        async with c.get(f"https://www.pixiv.net/ajax/illust/{pid}",
+                         headers=p_headers, proxy=proxy) as rep:
             if rep.status == 200:
                 json = await rep.json()
                 return json["body"]["urls"]
-            else:
-                return None
 
 
-async def reverse_pixiv(path: str) -> Optional[tuple]:
-    async with ClientSession() as cs:
-        async with cs.get(path,
-                          headers=p_headers,
-                          proxy=PROXY) as rep:
+async def reverse_pixiv(path: str) -> Optional[PixivImage]:
+    client = BypassClient if USE_SNI_BYPASS else ClientSession
+    proxy = "" if USE_SNI_BYPASS else PROXY
+    async with client() as c:
+        async with c.get(path, headers=p_headers, proxy=proxy) as rep:
             content = await rep.read()
             if rep.status == 200:
                 result = PixivImage(
