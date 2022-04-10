@@ -13,7 +13,27 @@ p_headers = {
 }
 
 
-async def get_pixiv(query: str, img_type: str) -> Union[Dict, Response]:
+class PixivImage:
+    pid: str
+    page: int
+    url: str
+    ext: str
+    content: bytes
+
+    def __init__(self,
+                 pid: str,
+                 ext: str,
+                 content: bytes,
+                 page: Optional[int] = 0,
+                 url: Optional[str] = None):
+        self.pid = pid
+        self.page = page
+        self.url = url
+        self.ext = ext
+        self.content = content
+
+
+async def get_pixiv(query: str, img_type: str) -> Union[Response, PixivImage]:
     split_query = query.split("/")
     if split_query[0] in ("img-original", "img-master", "c"):
         return {
@@ -57,6 +77,13 @@ async def reverse_pixiv(path: str) -> Optional[tuple]:
                           proxy=PROXY) as rep:
             content = await rep.read()
             if rep.status == 200:
-                return content, rep.headers['Content-Type']
-            else:
-                return None
+                result = PixivImage(
+                    pid=parse_pid(path),
+                    content=content,
+                    ext=rep.headers['Content-Type']
+                )
+                return result
+
+
+def parse_pid(path: str) -> str:
+    return path.split("/")[-1].split("_")[0]

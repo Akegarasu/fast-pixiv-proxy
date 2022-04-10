@@ -28,15 +28,13 @@ async def read_root(pixiv_path: str, img_type: str = "original"):
     resp = await get_pixiv(query=pixiv_path, img_type=img_type)
     if isinstance(resp, Response):
         return resp
-    if isinstance(resp, dict):
-        if "result" in resp:
-            rep, content_type = resp["result"]
-            headers = {
-                "cache-control": "no-cache",
-                "Content-Type": content_type,
-                "Content-Disposition": f'''inline; filename="{resp['pid']}"'''
-            }
-            return Response(rep, headers=headers, media_type="stream")
+    if isinstance(resp, PixivImage):
+        headers = {
+            "cache-control": "no-cache",
+            "Content-Type": resp.ext,
+            "Content-Disposition": f'''inline; filename="{resp.pid}"'''
+        }
+        return Response(resp.content, headers=headers, media_type="stream")
     return Response("Invalid request", status_code=400)
 
 if __name__ == '__main__':
