@@ -22,6 +22,9 @@ async def read_root():
    - http://{SELF_URL}/12345678?img_type=small (small image)'''
     return Response(rep)
 
+@app.get("/favicon.ico")
+async def _():
+    return Response()
 
 @app.get("/{pixiv_path:path}")
 async def read_root(pixiv_path: str, img_type: str = "original"):
@@ -36,10 +39,6 @@ async def read_root(pixiv_path: str, img_type: str = "original"):
         }
         return Response(resp.content, headers=headers, media_type="stream")
     return Response("Invalid request", status_code=400)
-
-@app.get("/favicon.ico")
-async def _():
-    return Response()
 
 if __name__ == '__main__':
     uvicorn.run(app='main:app', host=HOST, port=PORT, reload=True)
